@@ -4,7 +4,9 @@
 *.dll
 *.so
 *.dylib
-
+neo4j/config
+!neo4j/config/init.cypher
+music-match
 # Test binary, built with `go test -c`
 *.test
 
