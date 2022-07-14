@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/danny-m08/music-match/logging"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,12 +20,17 @@ func main() {
 
 	err := config.CreateConfigFromFile(configFile)
 	if err != nil {
-		fmt.Println(err.Error())
+		logging.Error("Unable to create config from file: " + err.Error())
 		os.Exit(1)
 	}
 
+	serv, err := server.NewServer(config.GetGlobalConfig().GetHTTPServerConfig(), config.GetGlobalConfig().GetDBConfig())
+	if err != nil {
+		logging.Error("Unable to start server: " + err.Error())
+	}
+
 	go func() {
-		errChan <- server.StartServer(config.GetGlobalConfig().GetHTTPServerConfig())
+		errChan <- serv.StartServer()
 	}()
 
 	select {
@@ -33,6 +39,9 @@ func main() {
 		os.Exit(1)
 	case sig := <-sigChan:
 		fmt.Printf("Signal %s caught -- terminating program", sig.String())
+		if serv.Close() != nil {
+			logging.Error("Error closing server: " + err.Error())
+		}
 		os.Exit(0)
 	}
 }

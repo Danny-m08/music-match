@@ -41,11 +41,11 @@ func GetGlobalConfig() *Config {
 }
 
 //GetDBConfig returns the DBConfig of the global config object
-func (config *Config) GetDBConfig() Neo4jConfig {
+func (config *Config) GetDBConfig() *Neo4jConfig {
 	return config.DB
 }
 
 //GetHTTPServerConfig returns the HTTP Config object from the global config
-func (config *Config) GetHTTPServerConfig() HTTPConfig {
+func (config *Config) GetHTTPServerConfig() *HTTPConfig {
 	return config.Http
 }

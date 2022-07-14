@@ -4,9 +4,6 @@ services:
     image: neo4j:latest
     environment:
       NEO4J_AUTH: "none"
-#    volumes:
-#      - "./neo4j/config/data:/data"
-#      - "./neo4j/config/log:/log"
     ports:
       - "7474:7474"
       - "7473:7473"
@@ -19,3 +16,10 @@ services:
     volumes:
       - "./neo4j/config/init.cypher:/init.cypher"
     entrypoint: "bash -c 'while true; do if cypher-shell --address=neo4j://neo4j:7687 -f /init.cypher; then break; fi; done'"
+  # music-match:
+  #   image: music-match:latest
+  #   depends_on:
+  #     - neo4j
+  #     - init
+  #   ports:
+  #     - "8080:8080"

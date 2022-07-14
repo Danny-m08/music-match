@@ -28,7 +28,10 @@ const (
 )
 
 //NewClient creates a new neo4j client using the specified config
-func NewClient(conf config.Neo4jConfig) (*Client, error) {
+func NewClient(conf *config.Neo4jConfig) (*Client, error) {
+	if conf == nil {
+		return nil, errors.New("Neo4j config cannot be nil")
+	}
 
 	auth := neo4j.AuthToken{}
 	if conf.Plaintext {

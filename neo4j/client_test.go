@@ -16,7 +16,7 @@ import (
 
 func TestMain(m *testing.M) {
 
-	err := exec.Command("docker-compose", "up", "-d").Run()
+	err := exec.Command("docker-compose", "up", "-d", "neo4j", "init").Run()
 	if err != nil {
 		os.Exit(1)
 	}
