@@ -34,7 +34,7 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 func (s *server) StartServer() error {
 
 	http.HandleFunc("/login", s.login)
-	http.HandleFunc("/signuo", s.newUser)
+	http.HandleFunc("/signup", s.newUser)
 	http.HandleFunc("/follow", s.follow)
 	http.HandleFunc("/followers", s.getFollowers)
 

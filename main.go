@@ -27,6 +27,7 @@ func main() {
 	serv, err := server.NewServer(config.GetGlobalConfig().GetHTTPServerConfig(), config.GetGlobalConfig().GetDBConfig())
 	if err != nil {
 		logging.Error("Unable to start server: " + err.Error())
+		os.Exit(1)
 	}
 
 	go func() {

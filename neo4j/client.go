@@ -53,6 +53,11 @@ func NewClient(conf *config.Neo4jConfig) (*Client, error) {
 		return nil, err
 	}
 
+	err = driver.VerifyConnectivity()
+	if err != nil {
+		return nil, err
+	}
+
 	logging.Info(fmt.Sprintf("Creating Neo4j session to config %s at %s", conf.Database, conf.URI))
 	session := driver.NewSession(neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
