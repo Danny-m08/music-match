@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 
 	output, err = exec.Command("docker-compose", "down").CombinedOutput()
 	if err != nil {
-		os.Exit(1)
+		fmt.Printf("Error removing neo4j docker container: %s: %s", output, err.Error())
 	}
 
 	os.Exit(res)
