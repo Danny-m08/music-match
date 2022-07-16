@@ -1,0 +1,31 @@
+name: Docker
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - develop
+      - release/v*.*.*
+  pull_request:
+    types:
+      - synchronize
+      - opened
+    branches:
+      - master
+      - develop
+      - release/v*.*.*
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  Build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: docker build -t music-match:test .
+      - name: Cleanup
+        run: docker rmi -f music-match:test

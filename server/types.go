@@ -16,10 +16,6 @@ type CreateUserRequest struct {
 }
 
 type followRequest struct {
-	User     *types.User `json:"user" :"user"`
-	Follower *types.User `json:"follower" :"follower"`
-}
-
-type followers struct {
-	followers []*types.User `json:"followers"`
+	User     *types.User `json:"user"`
+	Follower *types.User `json:"follower"`
 }

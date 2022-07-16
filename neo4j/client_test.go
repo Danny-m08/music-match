@@ -16,18 +16,18 @@ import (
 
 func TestMain(m *testing.M) {
 
-	err := exec.Command("docker-compose", "up", "-d", "neo4j", "init").Run()
+	output, err := exec.Command("docker-compose", "up", "-d", "neo4j", "init").CombinedOutput()
 	if err != nil {
-		os.Exit(1)
+		panic(fmt.Sprintf("Unable to start neo4j docker container: %s: %s", string(output), err.Error()))
 	}
 
 	time.Sleep(15 * time.Second)
 
 	res := m.Run()
 
-	err = exec.Command("docker-compose", "down").Run()
+	output, err = exec.Command("docker-compose", "down").CombinedOutput()
 	if err != nil {
-		os.Exit(1)
+		fmt.Printf("Error removing neo4j docker container: %s: %s", output, err.Error())
 	}
 
 	os.Exit(res)
@@ -55,7 +55,7 @@ func TestE2E(t *testing.T) {
 		forSale := types.Listing{
 			ID:    types.GenerateID(),
 			Price: price,
-			Track: types.Track{
+			Track: &types.Track{
 				Name: "testTrack",
 				Path: "./testTrack.jpg",
 			},
@@ -63,8 +63,8 @@ func TestE2E(t *testing.T) {
 		}
 
 		t.Run("NewClient", func(t *testing.T) {
-			convey.Convey("If we create a new client and try to connect to the DB we should get no errors and a valid connection", t, func() {
-				conf := config.Neo4jConfig{
+			convey.Convey("If we create a new client and try to connect to the DB we should get no errors and a valid connection\n", t, func() {
+				conf := &config.Neo4jConfig{
 					URI:       "neo4j://localhost",
 					Plaintext: true,
 				}
@@ -76,14 +76,14 @@ func TestE2E(t *testing.T) {
 		})
 
 		t.Run("InsertUser", func(t *testing.T) {
-			convey.Convey("If we try to insert a user into the database it should be successful", t, func() {
+			convey.Convey("If we try to insert a user into the database it should be successful\n", t, func() {
 				convey.So(client.InsertUser(&user), convey.ShouldBeNil)
 				convey.So(client.InsertUser(&follower), convey.ShouldBeNil)
 			})
 		})
 
 		t.Run("InsertUserError", func(t *testing.T) {
-			convey.Convey("If we try to create users whose email or username already exist we should get an error", t, func() {
+			convey.Convey("If we try to create users whose email or username already exist we should get an error\n", t, func() {
 				sameEmail := types.User{
 					Username: "sameEmail",
 					Email:    user.Email,
@@ -101,7 +101,7 @@ func TestE2E(t *testing.T) {
 		})
 
 		t.Run("RetrieveUser", func(t *testing.T) {
-			convey.Convey("If we try to retrieve user data from the database then we should get no errors", t, func() {
+			convey.Convey("If we try to retrieve user data from the database then we should get no errors\n", t, func() {
 				usr, err := client.GetUser(&user)
 				convey.So(err, convey.ShouldBeNil)
 				convey.So(*usr, convey.ShouldResemble, user)
@@ -113,13 +113,13 @@ func TestE2E(t *testing.T) {
 		})
 
 		t.Run("CreateFollowing", func(t *testing.T) {
-			convey.Convey(fmt.Sprintf("If we create a following from %s -> %s we should get no errors and proper structs", follower.String(), user.String()), t, func() {
+			convey.Convey(fmt.Sprintf("If we create a following from %s -> %s we should get no errors and proper structs\n", follower.String(), user.String()), t, func() {
 				convey.So(client.CreateFollowing(&user, &follower), convey.ShouldBeNil)
 			})
 		})
 
 		t.Run("GetFollowers", func(t *testing.T) {
-			convey.Convey("If we try to retrieve followers for the users, we should get proper values and no error", t, func() {
+			convey.Convey("If we try to retrieve followers for the users, we should get proper values and no error\n", t, func() {
 				user.Password = ""
 				follower.Password = ""
 
@@ -135,7 +135,7 @@ func TestE2E(t *testing.T) {
 		})
 
 		t.Run("Unfollow", func(t *testing.T) {
-			convey.Convey("If follower unfollows user, we should get no error and the user should no longer have any followers", t, func() {
+			convey.Convey("If follower unfollows user, we should get no error and the user should no longer have any followers\n", t, func() {
 				convey.So(client.Unfollow(&user, &follower), convey.ShouldBeNil)
 
 				followers, err := client.GetFollowers(&user)
@@ -145,7 +145,7 @@ func TestE2E(t *testing.T) {
 		})
 
 		t.Run("CreateListing", func(t *testing.T) {
-			convey.Convey("If a user creates a listing we should get no errors", t, func() {
+			convey.Convey("If a user creates a listing we should get no errors\n", t, func() {
 				convey.So(client.CreateUserListing(&user, &forSale), convey.ShouldBeNil)
 
 				isSold, err := client.IsSold(&forSale)
@@ -155,7 +155,7 @@ func TestE2E(t *testing.T) {
 		})
 
 		t.Run("BuyListing", func(t *testing.T) {
-			convey.Convey("If a user buys a listing then we should get no error", t, func() {
+			convey.Convey("If a user buys a listing then we should get no error\n", t, func() {
 				convey.So(client.Sold(&follower, &forSale), convey.ShouldBeNil)
 
 				isSold, err := client.IsSold(&forSale)
@@ -165,7 +165,7 @@ func TestE2E(t *testing.T) {
 		})
 
 		t.Run("DeleteUser", func(t *testing.T) {
-			convey.Convey("If we try to delete a user we should get no error and the user should no longer exist in the DB", t, func() {
+			convey.Convey("If we try to delete a user we should get no error and the user should no longer exist in the DB\n", t, func() {
 				convey.So(client.DeleteUser(follower.Username, follower.Email), convey.ShouldBeNil)
 
 				usr, err := client.GetUser(&follower)
@@ -179,7 +179,7 @@ func TestE2E(t *testing.T) {
 		})
 
 		t.Run("CloseSession", func(t *testing.T) {
-			convey.Convey("If we close the client session we should get no errors", t, func() {
+			convey.Convey("If we close the client session we should get no errors\n", t, func() {
 				convey.So(client.Close(), convey.ShouldBeNil)
 			})
 		})

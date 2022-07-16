@@ -15,8 +15,8 @@ const configFile = "config.yaml"
 
 func main() {
 	errChan := make(chan error)
-	sigChan := make(chan os.Signal)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	err := config.CreateConfigFromFile(configFile)
 	if err != nil {
