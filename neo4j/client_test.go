@@ -55,7 +55,7 @@ func TestE2E(t *testing.T) {
 		forSale := types.Listing{
 			ID:    types.GenerateID(),
 			Price: price,
-			Track: types.Track{
+			Track: &types.Track{
 				Name: "testTrack",
 				Path: "./testTrack.jpg",
 			},
@@ -64,7 +64,7 @@ func TestE2E(t *testing.T) {
 
 		t.Run("NewClient", func(t *testing.T) {
 			convey.Convey("If we create a new client and try to connect to the DB we should get no errors and a valid connection", t, func() {
-				conf := config.Neo4jConfig{
+				conf := &config.Neo4jConfig{
 					URI:       "neo4j://localhost",
 					Plaintext: true,
 				}

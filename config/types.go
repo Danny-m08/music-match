@@ -30,7 +30,7 @@ type Neo4jConfig struct {
 }
 
 type RetryConfig struct {
-	max      uint `yaml:"max"`
-	interval uint `yaml:"max"`
-	timeout  uint `yaml:"timeout"`
+	//max      uint `yaml:"max"`
+	//interval uint `yaml:"max"`
+	//timeout  uint `yaml:"timeout"`
 }

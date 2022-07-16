@@ -16,7 +16,7 @@ const (
 type Listing struct {
 	Price   currency.Amount `json:"price"`
 	ID      string          `json:"id"`
-	Track   Track           `json:"track"'`
+	Track   *Track          `json:"track"`
 	Created *time.Time      `json:"created"`
 	Tx      *Transaction    `json:"transaction,omitempty"`
 }
@@ -43,7 +43,6 @@ func GenerateID() string {
 
 func (l *Listing) String() string {
 	data, _ := json.Marshal(l)
-	l.Created.String()
 
 	return string(data)
 }

@@ -20,8 +20,8 @@ const (
 	username = "username"
 	email    = "email"
 	password = "password"
-	id       = "id"
-	date     = "date"
+	//id       = "id"
+	//date     = "date"
 
 	defaultDatabase = "neo4j"
 	dateFormat      = "2006-01-02 15:04:05.999999999 -0700 MST"
@@ -33,7 +33,7 @@ func NewClient(conf *config.Neo4jConfig) (*Client, error) {
 		return nil, errors.New("Neo4j config cannot be nil")
 	}
 
-	auth := neo4j.AuthToken{}
+	var auth neo4j.AuthToken
 	if conf.Plaintext {
 		auth = neo4j.NoAuth()
 	} else {
@@ -145,9 +145,9 @@ func (c *Client) InsertUser(user *types.User) error {
 }
 
 func (c *Client) CreateListing(listing *types.Listing) error {
-	query := "CREATE (l:Listing { id : '%s', price: '%d', date: '%s'}) return l"
+	query := "CREATE (l:Listing { id : '%s', price: '%s', date: '%s'}) return l"
 	logging.Info("Creating new listing: " + listing.String())
-	query = fmt.Sprintf(query, listing.ID, listing.Price, listing.Created.String())
+	query = fmt.Sprintf(query, listing.ID, listing.Price.String(), listing.Created.String())
 	_, err := c.writeTransaction(query)
 	return err
 }
@@ -216,24 +216,28 @@ func (c *Client) IsSold(l *types.Listing) (*types.Transaction, error) {
 	return tx, nil
 }
 
-func getTransaction(record *neo4j.Record, buyer, tx int) (*types.Transaction, error) {
-	var err error
-	res := &types.Transaction{}
-	b := record.Values[buyer].(neo4j.Node)
-	t := record.Values[tx].(neo4j.Relationship)
-
-	res.Buyer, err = getUser(&b, map[string]bool{
-		username: true,
-		email:    true,
-	})
-
-	err = getTransactionDetails(res, &t)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
+//func getTransaction(record *neo4j.Record, buyer, tx int) (*types.Transaction, error) {
+//	var err error
+//	res := &types.Transaction{}
+//	b := record.Values[buyer].(neo4j.Node)
+//	t := record.Values[tx].(neo4j.Relationship)
+//
+//	res.Buyer, err = getUser(&b, map[string]bool{
+//		username: true,
+//		email:    true,
+//	})
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	err = getTransactionDetails(res, &t)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return res, nil
+//}
 
 //writeTransaction is a generic write operation on the database
 func (c *Client) writeTransaction(query string) ([]*neo4j.Record, error) {
@@ -295,25 +299,25 @@ func getUser(node *neo4j.Node, required map[string]bool) (*types.User, error) {
 	return user, nil
 }
 
-func getTransactionDetails(tx *types.Transaction, relationship *neo4j.Relationship) error {
-	var err error
-
-	if relationship.Props[id] == nil {
-		return errors.New("unable to retrieve transaction ID")
-	}
-
-	if relationship.Props[date] == nil {
-		return errors.New("unable to retrieve transaction execution date")
-	}
-
-	tx.ID = relationship.Props[id].(string)
-	tx.Date, err = time.Parse(dateFormat, relationship.Props[date].(string))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+//func getTransactionDetails(tx *types.Transaction, relationship *neo4j.Relationship) error {
+//	var err error
+//
+//	if relationship.Props[id] == nil {
+//		return errors.New("unable to retrieve transaction ID")
+//	}
+//
+//	if relationship.Props[date] == nil {
+//		return errors.New("unable to retrieve transaction execution date")
+//	}
+//
+//	tx.ID = relationship.Props[id].(string)
+//	tx.Date, err = time.Parse(dateFormat, relationship.Props[date].(string))
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
 
 func (c *Client) Close() error {
 	err := c.session.Close()
