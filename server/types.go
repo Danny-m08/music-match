@@ -19,3 +19,9 @@ type followRequest struct {
 	User     *types.User `json:"user"`
 	Follower *types.User `json:"follower"`
 }
+type UpdateUserRequest struct {
+	Email            string `json:"email,omitempty"`
+	Password         string `json:"password,omitempty"`
+	Username         string `json:"username,omitempty"`
+	OriginalUsername string `json:"OGuser"`
+}
