@@ -3,6 +3,8 @@ package config
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
+	"strings"
 )
 
 var gCFG *Config
@@ -29,6 +31,12 @@ func CreateConfigFromData(data []byte) error {
 	err := yaml.Unmarshal(data, config)
 	if err != nil {
 		return err
+	}
+
+	port := os.Getenv("PORT")
+	if port != "" {
+		strs := strings.Split(config.Http.ListenAddr, ":")
+		config.Http.ListenAddr = strs[0] + ":" + port
 	}
 
 	gCFG = config
