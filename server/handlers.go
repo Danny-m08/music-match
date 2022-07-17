@@ -84,10 +84,12 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 	userInfo, err := server.neo4jClient.GetUser(&usr)
 	if err != nil {
 		http.Error(w, "Username or password incorrect", http.StatusUnauthorized)
+		return
 	}
 
-	if userInfo.Password == loginReq.Password {
+	if userInfo == nil || userInfo.Password != loginReq.Password {
 		http.Error(w, "Username or password incorrect", http.StatusUnauthorized)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
