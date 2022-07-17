@@ -36,10 +36,10 @@ func main() {
 
 	select {
 	case err := <-errChan:
-		fmt.Println(err.Error())
+		logging.Error(err.Error())
 		os.Exit(1)
 	case sig := <-sigChan:
-		fmt.Printf("Signal %s caught -- terminating program", sig.String())
+		logging.Info(fmt.Sprintf("Signal %s caught -- terminating program", sig.String()))
 		if serv.Close() != nil {
 			logging.Error("Error closing server: " + err.Error())
 		}
