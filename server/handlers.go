@@ -14,6 +14,7 @@ const unableToProcessRequestFormat = "Unable to process request from %s: %s"
 
 func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 	logging.Info("New user request from: " + req.RemoteAddr)
+	defer req.Body.Close()
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -64,6 +65,8 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 func (server *server) login(w http.ResponseWriter, req *http.Request) {
 	loginReq := LoginRequest{}
 
+	logging.Info("New login request from " + req.RemoteAddr)
+
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -81,6 +84,8 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 		Password: loginReq.Password,
 	}
 
+	logging.Info("Checking for user " + usr.Email)
+
 	userInfo, err := server.neo4jClient.GetUser(&usr)
 	if err != nil {
 		http.Error(w, "Username or password incorrect", http.StatusUnauthorized)
@@ -88,6 +93,7 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if userInfo == nil || userInfo.Password != loginReq.Password {
+		logging.Info("Invalid credentials for user " + usr.Email)
 		http.Error(w, "Username or password incorrect", http.StatusUnauthorized)
 		return
 	}
