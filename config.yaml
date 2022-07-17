@@ -1,9 +1,10 @@
 http:
   listen-address: 0.0.0.0:8080
 neo4j:
- # endpoint: "neo4j+s://bd75ff33.databases.neo4j.io"
-  endpoint: "neo4j://127.0.0.1"
-  plaintext: true
+  endpoint: "neo4j+s://01f4c3bc.databases.neo4j.io"
+  plaintext: false
+  username: neo4j
+  password: YuoQdM62FKAQDuzesY4S6GgukPcSAtQ4OPzyQsL1fWI
   retry:
     interval: 1000 #interval between each request in ms
     max:  5 #max number of retries before aborting
