@@ -86,6 +86,7 @@ func (c *Client) GetUser(user *types.User) (*types.User, error) {
 
 	entry := records[0].Values[0].(neo4j.Node)
 	return &types.User{
+		Name:     entry.Props["name"].(string),
 		Email:    entry.Props["email"].(string),
 		Username: entry.Props["username"].(string),
 		Password: entry.Props["password"].(string),
