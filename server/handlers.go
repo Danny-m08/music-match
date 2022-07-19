@@ -61,6 +61,10 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 
 	logging.Info(fmt.Sprintf("%s created successfully", user.String()))
 	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte("Welcome!"))
+	if err != nil {
+		logging.Error("Unable to write back to the client: " + err.Error())
+	}
 
 }
 
