@@ -16,6 +16,10 @@ type CreateUserRequest struct {
 	Username string `json:"username"`
 }
 
+type GetUserRequest struct {
+	Login string `json:"login"`
+}
+
 type followRequest struct {
 	User     *types.User `json:"user"`
 	Follower *types.User `json:"follower"`

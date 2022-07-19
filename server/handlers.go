@@ -69,6 +69,48 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 
 }
 
+func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
+	userReq := GetUserRequest{}
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logging.Error("Unable to process getUserRequest request")
+		http.Error(w, "Unable to proccess request", http.StatusBadRequest)
+		return
+	}
+
+	err = json.Unmarshal(body, &userReq)
+	if err != nil {
+		logging.Error("Unable to process getUserRequest request: " + err.Error())
+		http.Error(w, "Unable to proccess request", http.StatusBadRequest)
+		return
+	}
+
+	usr := types.User{
+		Email:    userReq.Login,
+		Password: userReq.Login,
+	}
+
+	user, err := server.neo4jClient.GetUser(&usr)
+	if err != nil {
+		logging.Error(fmt.Sprintf("Unable to get user %s from DB: %s", user.String(), err.Error()))
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		return
+	}
+
+	user.Password = ""
+
+	resp, err := json.Marshal(user)
+	if err != nil {
+		logging.Error(fmt.Sprintf("Unable to marshal user %s: %s", user.String(), err.Error()))
+		http.Error(w, "Unable to retrieve user info at this time. Please try again later", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}
+
 func (server *server) login(w http.ResponseWriter, req *http.Request) {
 	loginReq := LoginRequest{}
 
