@@ -45,6 +45,7 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 	}
 
 	user := &types.User{
+		Name:     userReq.Name,
 		Username: userReq.Username,
 		Password: userReq.Password,
 		Email:    userReq.Email,
@@ -60,6 +61,7 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 
 	logging.Info(fmt.Sprintf("%s created successfully", user.String()))
 	w.WriteHeader(http.StatusOK)
+
 }
 
 func (server *server) login(w http.ResponseWriter, req *http.Request) {
