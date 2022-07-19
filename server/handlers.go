@@ -79,7 +79,7 @@ func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	logging.Info(fmt.Sprintf("user info request with body %s received", string(body)))
+	logging.Info(fmt.Sprintf("get user info request with body %s received", string(body)))
 
 	err = json.Unmarshal(body, &userReq)
 	if err != nil {
@@ -90,7 +90,7 @@ func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
 
 	usr := types.User{
 		Email:    userReq.Login,
-		Password: userReq.Login,
+		Username: userReq.Login,
 	}
 
 	logging.Info(fmt.Sprintf("Fetching user %s from DB", usr.String()))
@@ -100,6 +100,10 @@ func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
 		logging.Error(fmt.Sprintf("Unable to get user %s from DB: %s", user.String(), err.Error()))
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
+	}
+
+	if user != nil {
+
 	}
 
 	user.Password = ""
@@ -157,8 +161,19 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	userInfo.Password = ""
+
+	resp, err := json.Marshal(userInfo)
+	if err != nil {
+		logging.Error("Unable to send userInfo in response: " + err.Error())
+		http.Error(w, "Unable to process request. Please try again later", http.StatusInternalServerError)
+		return
+	}
+
 	logging.Info("User data successfully retrieved from DB for" + loginReq.Login)
 	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+
 }
 
 func (server *server) follow(w http.ResponseWriter, req *http.Request) {
