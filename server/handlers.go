@@ -170,7 +170,7 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	logging.Info("User data successfully retrieved from DB for" + loginReq.Login)
+	logging.Info(fmt.Sprintf("Sending %s back to user", userInfo.String()))
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
 
