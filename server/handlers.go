@@ -79,6 +79,8 @@ func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	logging.Info(fmt.Sprintf("user info request with body %s received", string(body)))
+
 	err = json.Unmarshal(body, &userReq)
 	if err != nil {
 		logging.Error("Unable to process getUserRequest request: " + err.Error())
@@ -91,6 +93,8 @@ func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
 		Password: userReq.Login,
 	}
 
+	logging.Info(fmt.Sprintf("Fetching user %s from DB", usr.String()))
+
 	user, err := server.neo4jClient.GetUser(&usr)
 	if err != nil {
 		logging.Error(fmt.Sprintf("Unable to get user %s from DB: %s", user.String(), err.Error()))
@@ -99,6 +103,7 @@ func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	user.Password = ""
+	logging.Info(fmt.Sprintf("Returning %s to client", user.String()))
 
 	resp, err := json.Marshal(user)
 	if err != nil {
