@@ -129,24 +129,30 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 	}
 
 	usr := types.User{
-		Email:    loginReq.Email,
+		Email:    loginReq.Login,
+		Username: loginReq.Login,
 		Password: loginReq.Password,
 	}
 
-	logging.Info("Checking for user " + usr.Email)
+	logging.Info("Checking for user " + usr.String())
 
 	userInfo, err := server.neo4jClient.GetUser(&usr)
 	if err != nil {
-		http.Error(w, "Username or password incorrect", http.StatusUnauthorized)
+		http.Error(w, "Unable to retrieve user's at this time. Please try again later", http.StatusUnauthorized)
 		return
 	}
 
-	if userInfo == nil || userInfo.Password != loginReq.Password {
-		logging.Info("Invalid credentials for user " + usr.Email)
-		http.Error(w, "Username or password incorrect", http.StatusUnauthorized)
+	if userInfo == nil {
+		logging.Info("No such user found for " + loginReq.Login)
+		http.Error(w, "Invalid login", http.StatusUnauthorized)
+		return
+	} else if userInfo.Password != loginReq.Password {
+		logging.Info("Invalid credentials for user " + loginReq.Login)
+		http.Error(w, "Invalid login", http.StatusUnauthorized)
 		return
 	}
 
+	logging.Info("User data successfully retrieved from DB for" + loginReq.Login)
 	w.WriteHeader(http.StatusOK)
 }
 
