@@ -3,12 +3,13 @@ package types
 import "fmt"
 
 type User struct {
-	Username  string     `json:"username"`
-	Password  string     `json:"password"`
-	Email     string     `json:"email"`
-	Following []*User    `json:"following,omitempty"`
-	Followers []*User    `json:"followers,omitempty"`
-	Listings  []*Listing `json:"listings,omitempty"`
+	Name      string
+	Username  string
+	Password  string
+	Email     string
+	Following []*User
+	Followers []*User
+	Listings  []*Listing
 }
 
 func NewUser() *User {
