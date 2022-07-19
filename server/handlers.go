@@ -118,6 +118,36 @@ func (server *server) follow(w http.ResponseWriter, req *http.Request) {
 	logging.Info(fmt.Sprintf("%s -> %s following created successfully", request.Follower.String(), request.User.String()))
 }
 
+//new function update user info
+
+func (server *server) updateUserInfo(w http.ResponseWriter, req *http.Request) {
+	//var updaterequest of type specified in types.go .. parse contents and distribute into created variable
+	UpdateRequest := &UpdateUserRequest{}
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		http.Error(w, "Unable to process request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = json.Unmarshal(body, UpdateRequest)
+	if err != nil {
+		http.Error(w, "Unable to process request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	user := types.User{
+		Username: UpdateRequest.Username,
+		Password: UpdateRequest.Password,
+		Email:    UpdateRequest.Email,
+	}
+
+	err = server.neo4jClient.UpdateUser(&user)
+	if err != nil {
+		logging.Error("Unable to create update user request: " + err.Error())
+		http.Error(w, "Unable to process request", http.StatusInternalServerError)
+		return
+	}
+}
+
 func (server *server) getFollowers(w http.ResponseWriter, req *http.Request) {
 	//user, err := readUser(req)
 	//if err != nil {

@@ -37,6 +37,7 @@ func (s *server) StartServer() error {
 	http.HandleFunc("/signup", s.newUser)
 	http.HandleFunc("/follow", s.follow)
 	http.HandleFunc("/followers", s.getFollowers)
+	http.HandleFunc("/updateuser", s.updateUserInfo)
 
 	logging.Info("Server starting and listening on " + s.httpConfig.ListenAddr)
 	if s.httpConfig.TLS != nil && s.httpConfig.TLS.Enabled {

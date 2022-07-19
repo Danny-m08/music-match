@@ -2,11 +2,12 @@ package neo4j_test
 
 import (
 	"fmt"
-	"github.com/bojanz/currency"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
+
+	"github.com/bojanz/currency"
 
 	"github.com/danny-m08/music-match/config"
 	"github.com/danny-m08/music-match/neo4j"
@@ -175,6 +176,48 @@ func TestE2E(t *testing.T) {
 				followers, err := client.GetFollowers(&user)
 				convey.So(err, convey.ShouldBeNil)
 				convey.So(len(followers), convey.ShouldEqual, 0)
+			})
+		})
+
+		t.Run("UpdatePassInfo", func(t *testing.T) {
+			changedUser := types.User{
+				Username: "",
+				Password: "meowmeow",
+				Email:    "",
+			}
+			convey.Convey("If we try to update user info it should be successful\n", t, func() {
+				convey.So(client.UpdateUser(&changedUser, user.Username), convey.ShouldBeNil)
+				user, err := client.GetUser(&user)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(user.Password, convey.ShouldEqual, changedUser.Password)
+			})
+		})
+		t.Run("UpdateEmailInfo", func(t *testing.T) {
+			changedUser := types.User{
+				Username: "",
+				Password: "",
+				Email:    "calilove2022@gmail.com",
+			}
+			convey.Convey("If we try to update user info it should be successful\n", t, func() {
+				convey.So(client.UpdateUser(&changedUser, user.Username), convey.ShouldBeNil)
+				user, err := client.GetUser(&user)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(user.Email, convey.ShouldEqual, changedUser.Email)
+			})
+		})
+
+		t.Run("UpdateUserInfo", func(t *testing.T) {
+			changedUser := types.User{
+				Username: "quackquack",
+				Password: "",
+				Email:    "",
+			}
+			convey.Convey("If we try to update user info it should be successful\n", t, func() {
+				convey.So(client.UpdateUser(&changedUser, user.Username), convey.ShouldBeNil)
+				user, err := client.GetUser(&changedUser)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(user.Username, convey.ShouldEqual, changedUser.Username)
+
 			})
 		})
 

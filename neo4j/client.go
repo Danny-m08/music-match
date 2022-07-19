@@ -148,7 +148,26 @@ func (c *Client) InsertUser(user *types.User) error {
 	_, err := c.writeTransaction(query)
 	return err
 }
+func (c *Client) UpdateUser(user *types.User, OGstring string) error {
+	query := "MATCH (u:User { username: '%s' }) SET %s   RETURN u"
+	//initialize
+	setString := ""
+	//check for empty string overwrite
+	if user.Username != "" {
+		setString += fmt.Sprintf("u.username= '%s'", user.Username)
+	}
 
+	if user.Password != "" {
+		setString += fmt.Sprintf("u.password= '%s'", user.Password)
+	}
+	if user.Email != "" {
+		setString += fmt.Sprintf("u.email= '%s'", user.Email)
+	}
+
+	query = fmt.Sprintf(query, OGstring, setString)
+	_, err := c.writeTransaction(query)
+	return err
+}
 func (c *Client) CreateListing(listing *types.Listing) error {
 	query := "CREATE (l:Listing { id : '%s', price: '%s', date: '%s'}) return l"
 	logging.Info("Creating new listing: " + listing.String())
