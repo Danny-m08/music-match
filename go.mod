@@ -19,6 +19,7 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )

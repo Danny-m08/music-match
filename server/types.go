@@ -20,6 +20,10 @@ type GetUserRequest struct {
 	Login string `json:"login"`
 }
 
+type UploadFileRequest struct {
+	Name string `json:"name"`
+}
+
 type followRequest struct {
 	User     *types.User `json:"user"`
 	Follower *types.User `json:"follower"`

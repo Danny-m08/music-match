@@ -12,6 +12,7 @@ import (
 type server struct {
 	neo4jClient *neo4j.Client
 	httpConfig  *config.HTTPConfig
+	sessions    map[string]string
 }
 
 func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*server, error) {
@@ -38,6 +39,7 @@ func (s *server) StartServer() error {
 	http.HandleFunc("/signup", s.newUser)
 	http.HandleFunc("/follow", s.follow)
 	http.HandleFunc("/followers", s.getFollowers)
+	http.HandleFunc("/upload", s.uploadFile)
 
 	logging.Info("Server starting and listening on " + s.httpConfig.ListenAddr)
 	if s.httpConfig.TLS != nil && s.httpConfig.TLS.Enabled {
