@@ -7,6 +7,10 @@ test: mocks
 	@go test -v -race ./...
 
 lint: mocks
+	@if ! golangci-lint version -h 1>/dev/null 2>/dev/null; then \
+      		echo "Installing golangci-lint..."; \
+      		go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.2; \
+    fi
 	@golangci-lint run
 
 docker-build:
