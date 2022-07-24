@@ -10,6 +10,7 @@ import (
 
 	"github.com/danny-m08/music-match/config"
 	"github.com/danny-m08/music-match/neo4j"
+	"github.com/danny-m08/music-match/server"
 	"github.com/danny-m08/music-match/types"
 	"github.com/smartystreets/goconvey/convey"
 )
@@ -21,7 +22,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Unable to start neo4j docker container: %s: %s", string(output), err.Error()))
 	}
 
-	time.Sleep(15 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	res := m.Run()
 
@@ -62,13 +63,35 @@ func TestE2E(t *testing.T) {
 			Created: &now,
 		}
 
-		t.Run("NewClient", func(t *testing.T) {
-			convey.Convey("If we create a new client and try to connect to the DB we should get no errors and a valid connection\n", t, func() {
-				conf := &config.Neo4jConfig{
-					URI:       "neo4j://localhost",
-					Plaintext: true,
+		conf := &config.Neo4jConfig{
+			URI:       "neo4j://localhost",
+			Plaintext: true,
+		}
+
+		t.Run("NewServer", func(t *testing.T) {
+			convey.Convey("if we create a new http server with this DB as a backend we should get no errors", t, func() {
+				serverConf := &config.HTTPConfig{
+					ListenAddr: "0.0.0.0:0",
+					DataStore:  "test",
 				}
 
+				defer os.Remove("test")
+
+				srvr, err := server.NewServer(serverConf, conf)
+				defer convey.So(srvr.Close(), convey.ShouldBeNil)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(srvr, convey.ShouldNotBeNil)
+
+				file, err := os.Stat("test")
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(file.IsDir(), convey.ShouldBeTrue)
+				convey.So(file.Name(), convey.ShouldEqual, "test")
+
+			})
+		})
+
+		t.Run("NewClient", func(t *testing.T) {
+			convey.Convey("If we create a new client and try to connect to the DB we should get no errors and a valid connection\n", t, func() {
 				client, err = neo4j.NewClient(conf)
 				convey.So(err, convey.ShouldBeNil)
 				convey.So(client, convey.ShouldNotBeNil)

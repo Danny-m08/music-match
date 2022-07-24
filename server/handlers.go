@@ -17,6 +17,8 @@ import (
 
 const unableToProcessRequestFormat = "Unable to process request from %s: %s"
 
+var setCookies = []string{"username", "token"}
+
 func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 	logging.Info("New user request from: " + req.RemoteAddr)
 	defer req.Body.Close()
@@ -29,7 +31,7 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 	}
 
 	logging.Debug(string(body))
-	userReq := CreateUserRequest{}
+	userReq := types.CreateUserRequest{}
 
 	err = json.Unmarshal(body, &userReq)
 	if err != nil {
@@ -75,18 +77,12 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 
 	server.setUserCookies(w, user)
 	w.WriteHeader(http.StatusOK)
-
-	logging.Info("Responding to client with 200 OK")
-	_, err = w.Write([]byte("Welcome!"))
-	if err != nil {
-		logging.Error("Unable to write back to the client: " + err.Error())
-	}
-
 }
 
 func (server *server) uploadFile(w http.ResponseWriter, req *http.Request) {
 
-	if !server.verifyUser(req) {
+	username := server.verifyUser(req)
+	if username != "" {
 		http.Error(w, "Session expired", http.StatusUnauthorized)
 		return
 	}
@@ -120,9 +116,10 @@ func (server *server) uploadFile(w http.ResponseWriter, req *http.Request) {
 }
 
 func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
-	userReq := GetUserRequest{}
+	userReq := types.GetUserRequest{}
 
-	if !server.verifyUser(req) {
+	username := server.verifyUser(req)
+	if username != "" {
 		http.Error(w, "Session expired", http.StatusUnauthorized)
 		return
 	}
@@ -180,11 +177,12 @@ func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
 }
 
 func (server *server) login(w http.ResponseWriter, req *http.Request) {
-	loginReq := LoginRequest{}
+	loginReq := types.LoginRequest{}
 
 	logging.Info("New login request from " + req.RemoteAddr)
 
-	if server.verifyUser(req) {
+	username := server.verifyUser(req)
+	if username != "" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -211,7 +209,8 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 
 	userInfo, err := server.neo4jClient.GetUser(&usr)
 	if err != nil {
-		http.Error(w, "Unable to retrieve user's at this time. Please try again later", http.StatusUnauthorized)
+		logging.Error("Error retrieving user from DB: " + err.Error())
+		http.Error(w, "Unable to retrieve user's at this time. Please try again later", http.StatusInternalServerError)
 		return
 	}
 
@@ -219,8 +218,11 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 		logging.Info("No such user found for " + loginReq.Login)
 		http.Error(w, "Invalid login", http.StatusUnauthorized)
 		return
-	} else if bcrypt.CompareHashAndPassword([]byte(userInfo.Password), []byte(loginReq.Password)) != nil {
-		logging.Info("Invalid credentials for user " + loginReq.Login)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(userInfo.Password), []byte(loginReq.Password))
+	if err != nil {
+		logging.Info(fmt.Sprintf("Invalid credentials for user %s: %s ", loginReq.Login, err.Error()))
 		http.Error(w, "Invalid login", http.StatusUnauthorized)
 		return
 	}
@@ -243,9 +245,10 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 }
 
 func (server *server) follow(w http.ResponseWriter, req *http.Request) {
-	request := &followRequest{}
+	request := &types.FollowRequest{}
 
-	if !server.verifyUser(req) {
+	username := server.verifyUser(req)
+	if username != "" {
 		http.Error(w, "Session timed out", http.StatusUnauthorized)
 		return
 	}
@@ -270,6 +273,16 @@ func (server *server) follow(w http.ResponseWriter, req *http.Request) {
 	}
 
 	logging.Info(fmt.Sprintf("%s -> %s following created successfully", request.Follower.String(), request.User.String()))
+}
+
+func (server *server) LogOut(w http.ResponseWriter, req *http.Request) {
+	username := server.verifyUser(req)
+	if username != "" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	delete(server.sessions, username)
 }
 
 func (server *server) getFollowers(w http.ResponseWriter, req *http.Request) {
@@ -307,24 +320,23 @@ func (server *server) getFollowers(w http.ResponseWriter, req *http.Request) {
 	//	w.Write(data)
 }
 
-func (s *server) verifyUser(req *http.Request) bool {
+func (s *server) verifyUser(req *http.Request) string {
 	username, err := req.Cookie("username")
 	if err != nil || username.Value == "" {
-		return false
+		return ""
 	}
 
 	token, ok := s.sessions[username.Value]
-	if !ok {
-		return false
+	if !ok || token == "" {
+		return ""
 	}
 
 	cookieToken, err := req.Cookie("token")
 	if err != nil || cookieToken.Value != token {
-		delete(s.sessions, username.Value)
-		return false
+		return ""
 	}
 
-	return true
+	return username.Value
 }
 
 func (s *server) setUserCookies(w http.ResponseWriter, user *types.User) {
@@ -332,18 +344,23 @@ func (s *server) setUserCookies(w http.ResponseWriter, user *types.User) {
 		return
 	}
 
+	const alphaNumeric = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ"
 	rand.Seed(time.Now().UnixNano())
-	token := make([]byte, 32)
-	rand.Read(token)
+	token := ""
+	for it := 0; it < 32; it++ {
+		token += string(alphaNumeric[rand.Intn(len(alphaNumeric))])
+	}
 
-	s.sessions[user.Username] = string(token)
-	http.SetCookie(w, &http.Cookie{
-		Name:  "token",
-		Value: string(token),
-	})
+	s.sessions[user.Username] = token
 
 	http.SetCookie(w, &http.Cookie{
 		Name:  "username",
 		Value: user.Username,
 	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "token",
+		Value: token,
+	})
+
 }

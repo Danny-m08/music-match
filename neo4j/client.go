@@ -11,6 +11,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
+type Neo4jClient interface {
+	GetUser(*types.User) (*types.User, error)
+	InsertUser(*types.User) error
+	CreateFollowing(user, follower *types.User) error
+	Close() error
+}
+
 type Client struct {
 	session neo4j.Session
 	driver  neo4j.Driver
@@ -69,6 +76,10 @@ func NewClient(conf *config.Neo4jConfig) (*Client, error) {
 		session: session,
 		driver:  driver,
 	}, nil
+}
+
+func (c *Client) GetNeo4jClient() Client {
+	return *c
 }
 
 ////GetUser queries the DB for the user with the given types object

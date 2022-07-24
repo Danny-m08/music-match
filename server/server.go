@@ -2,23 +2,43 @@ package server
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
+	"os"
+	"regexp"
+	"time"
+
 	"github.com/danny-m08/music-match/config"
 	"github.com/danny-m08/music-match/logging"
 	"github.com/danny-m08/music-match/neo4j"
-	"net/http"
-	"regexp"
 )
 
+var test = false
+
+type token struct {
+	created time.Time
+	value   string
+}
+
 type server struct {
-	neo4jClient *neo4j.Client
+	neo4jClient neo4j.Neo4jClient
 	httpConfig  *config.HTTPConfig
 	sessions    map[string]string
+	dataStore   string
 }
 
 func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*server, error) {
-	client, err := neo4j.NewClient(neo4jConfig)
+	var client *neo4j.Client
+	var err error
+
+	client, err = neo4j.NewClient(neo4jConfig)
 	if err != nil {
 		return nil, err
+	}
+
+	err = os.Mkdir(conf.DataStore, 0777)
+	if err != nil && !os.IsExist(err) {
+		return nil, errors.New(fmt.Sprintf("Unable to create data store directory at %s: %s", conf.DataStore, err.Error()))
 	}
 
 	if conf == nil {
@@ -28,6 +48,7 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 	return &server{
 		neo4jClient: client,
 		httpConfig:  conf,
+		sessions:    make(map[string]string),
 	}, nil
 }
 
@@ -35,10 +56,10 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 func (s *server) StartServer() error {
 
 	http.HandleFunc("/login", s.login)
-	http.HandleFunc("/getUser", s.getUserInfo)
+	//	http.HandleFunc("/getUser", s.getUserInfo)
 	http.HandleFunc("/signup", s.newUser)
-	http.HandleFunc("/follow", s.follow)
-	http.HandleFunc("/followers", s.getFollowers)
+	//	http.HandleFunc("/follow", s.follow)
+	//	http.HandleFunc("/followers", s.getFollowers)
 	http.HandleFunc("/upload", s.uploadFile)
 
 	logging.Info("Server starting and listening on " + s.httpConfig.ListenAddr)
@@ -51,11 +72,23 @@ func (s *server) StartServer() error {
 	}
 	logging.Debug("TLS disabled")
 
-	return http.ListenAndServe(s.httpConfig.ListenAddr, nil)
+	errChan := make(chan error)
+
+	go func() {
+		errChan <- http.ListenAndServe(s.httpConfig.ListenAddr, nil)
+	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-time.After(2 * time.Second):
+		return nil
+	}
 }
 
 func (s *server) Close() error {
 	if s.neo4jClient != nil {
+		logging.Info("Closing neo4j Client...")
 		return s.neo4jClient.Close()
 	}
 
