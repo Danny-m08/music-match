@@ -229,19 +229,9 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 
 	userInfo.Password = ""
 
-	resp, err := json.Marshal(userInfo)
-	if err != nil {
-		logging.Error("Unable to send userInfo in response: " + err.Error())
-		http.Error(w, "Unable to process request. Please try again later", http.StatusInternalServerError)
-		return
-	}
-
-	logging.Info(fmt.Sprintf("Sending %s back to user", userInfo.String()))
+	logging.Info("Login successful for " + userInfo.Username)
+	server.setUserCookies(w, userInfo)
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(resp)
-	if err != nil {
-		logging.Error(fmt.Sprintf("Error writing response back to %s: %s", req.RemoteAddr, err.Error()))
-	}
 }
 
 func (server *server) follow(w http.ResponseWriter, req *http.Request) {
