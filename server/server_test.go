@@ -49,7 +49,6 @@ func Test_E2E(t *testing.T) {
 
 		URL = "http://" + URL
 		neo4jMock := neo4j.NewMockNeo4jClient(ctrl)
-		test = true
 
 		httpServer := &server{
 			httpConfig:  &httpConfig,

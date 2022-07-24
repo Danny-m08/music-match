@@ -35,12 +35,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	select {
-	case sig := <-sigChan:
-		logging.Info(fmt.Sprintf("Signal %s caught -- terminating program", sig.String()))
-		if serv.Close() != nil {
-			logging.Error("Error closing server: " + err.Error())
-		}
-		os.Exit(0)
+	sig := <-sigChan
+	logging.Info(fmt.Sprintf("Signal %s caught -- terminating program", sig.String()))
+	if serv.Close() != nil {
+		logging.Error("Error closing server: " + err.Error())
 	}
+	os.Exit(0)
+
 }

@@ -13,13 +13,6 @@ import (
 	"github.com/danny-m08/music-match/neo4j"
 )
 
-var test = false
-
-type token struct {
-	created time.Time
-	value   string
-}
-
 type server struct {
 	neo4jClient neo4j.Neo4jClient
 	httpConfig  *config.HTTPConfig
@@ -38,7 +31,7 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 
 	err = os.Mkdir(conf.DataStore, 0777)
 	if err != nil && !os.IsExist(err) {
-		return nil, errors.New(fmt.Sprintf("Unable to create data store directory at %s: %s", conf.DataStore, err.Error()))
+		return nil, fmt.Errorf("Unable to create data store directory at %s: %s", conf.DataStore, err.Error())
 	}
 
 	if conf == nil {
@@ -49,6 +42,7 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 		neo4jClient: client,
 		httpConfig:  conf,
 		sessions:    make(map[string]string),
+		dataStore:   conf.DataStore,
 	}, nil
 }
 
@@ -56,10 +50,10 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 func (s *server) StartServer() error {
 
 	http.HandleFunc("/login", s.login)
-	//	http.HandleFunc("/getUser", s.getUserInfo)
+	http.HandleFunc("/getUser", s.getUserInfo)
 	http.HandleFunc("/signup", s.newUser)
-	//	http.HandleFunc("/follow", s.follow)
-	//	http.HandleFunc("/followers", s.getFollowers)
+	http.HandleFunc("/follow", s.follow)
+	http.HandleFunc("/followers", s.getFollowers)
 	http.HandleFunc("/upload", s.uploadFile)
 
 	logging.Info("Server starting and listening on " + s.httpConfig.ListenAddr)
