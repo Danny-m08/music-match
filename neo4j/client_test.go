@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Unable to start neo4j docker container: %s: %s", string(output), err.Error()))
 	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(15 * time.Second)
 
 	res := m.Run()
 

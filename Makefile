@@ -7,6 +7,8 @@ test: mocks
 	@go test -v -race ./...
 
 lint:
+	if ! golangci-lint version 1>/dev/null 2>/dev/null; then \
+  		echo "Installing golangci-lint"
 	@golangci-lint run
 
 docker-build:
