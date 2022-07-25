@@ -77,6 +77,7 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 
 	server.setUserCookies(w, user)
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(server.sessions[user.Username]))
 }
 
 func (server *server) uploadFile(w http.ResponseWriter, req *http.Request) {
@@ -232,6 +233,7 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 	logging.Info("Login successful for " + userInfo.Username)
 	server.setUserCookies(w, userInfo)
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(server.sessions[userInfo.Username]))
 }
 
 func (server *server) follow(w http.ResponseWriter, req *http.Request) {
