@@ -78,7 +78,8 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 	server.setUserCookies(w, user)
 
 	data, err := json.Marshal(types.LoginResponse{
-		Token: server.sessions[user.Username],
+		Username: user.Username,
+		Token:    server.sessions[user.Username],
 	})
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -242,7 +243,8 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 	logging.Info("Login successful for " + userInfo.Username)
 	server.setUserCookies(w, userInfo)
 	data, err := json.Marshal(types.LoginResponse{
-		Token: server.sessions[userInfo.Username],
+		Username: userInfo.Username,
+		Token:    server.sessions[userInfo.Username],
 	})
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

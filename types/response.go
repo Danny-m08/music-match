@@ -1,5 +1,6 @@
 package types
 
 type LoginResponse struct {
-	Token string `json:"token"`
+	Username string `json:"username"`
+	Token    string `json:"token"`
 }
