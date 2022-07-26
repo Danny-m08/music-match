@@ -193,6 +193,7 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 
 	username := server.verifyUser(req)
 	if username != "" {
+		logging.Info("Session already exists for user")
 		w.WriteHeader(http.StatusOK)
 		return
 	}
