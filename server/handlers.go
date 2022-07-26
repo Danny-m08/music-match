@@ -87,13 +87,12 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Write(data)
-	w.WriteHeader(http.StatusOK)
 }
 
 func (server *server) uploadFile(w http.ResponseWriter, req *http.Request) {
 
 	username := server.verifyUser(req)
-	if username != "" {
+	if username == "" {
 		http.Error(w, "Session expired", http.StatusUnauthorized)
 		return
 	}
@@ -130,7 +129,7 @@ func (server *server) getUserInfo(w http.ResponseWriter, req *http.Request) {
 	userReq := types.GetUserRequest{}
 
 	username := server.verifyUser(req)
-	if username != "" {
+	if username == "" {
 		http.Error(w, "Session expired", http.StatusUnauthorized)
 		return
 	}
@@ -259,7 +258,7 @@ func (server *server) follow(w http.ResponseWriter, req *http.Request) {
 	request := &types.FollowRequest{}
 
 	username := server.verifyUser(req)
-	if username != "" {
+	if username == "" {
 		http.Error(w, "Session timed out", http.StatusUnauthorized)
 		return
 	}
@@ -288,7 +287,7 @@ func (server *server) follow(w http.ResponseWriter, req *http.Request) {
 
 func (server *server) LogOut(w http.ResponseWriter, req *http.Request) {
 	username := server.verifyUser(req)
-	if username != "" {
+	if username == "" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}

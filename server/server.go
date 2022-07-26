@@ -20,6 +20,10 @@ type server struct {
 	dataStore   string
 }
 
+type Server struct {
+	s server
+}
+
 func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*server, error) {
 	var client *neo4j.Client
 	var err error
@@ -49,7 +53,6 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 //StartServer runs a http server using the given config object
 func (s *server) StartServer() error {
 
-	http.HandleFunc("/login", s.login)
 	http.HandleFunc("/getUser", s.getUserInfo)
 	http.HandleFunc("/signup", s.newUser)
 	http.HandleFunc("/follow", s.follow)

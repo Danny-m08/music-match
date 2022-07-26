@@ -30,17 +30,19 @@ func (j *jar) Cookies(_ *url.URL) []*http.Cookie {
 	return j.cookies
 }
 
+func RandomPort() string {
+	rand.Seed(time.Now().UnixNano())
+	return strconv.Itoa(8000 + rand.Intn(1000))
+}
+
 func Test_E2E(t *testing.T) {
 
 	convey.Convey("Neo4j End to End testing...", t, func() {
 
-		rand.Seed(time.Now().UnixNano())
-		port := strconv.Itoa(8000 + rand.Intn(1000))
-
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		URL := "localhost:" + port
+		URL := "localhost:" + RandomPort()
 
 		httpConfig := config.HTTPConfig{
 			ListenAddr: URL,
@@ -169,6 +171,21 @@ func Test_E2E(t *testing.T) {
 				convey.So(err, convey.ShouldBeNil)
 				convey.So(resp, convey.ShouldNotBeNil)
 				convey.So(resp.StatusCode, convey.ShouldEqual, http.StatusUnauthorized)
+			})
+		})
+
+		t.Run("GetUserInfo", func(t *testing.T) {
+
+			data, _ := json.Marshal(types.GetUserRequest{
+				Login: "SomeUser",
+			})
+
+			convey.Convey("If we try to get user info without logging in we should get an error and nil user", t, func() {
+				resp, err := http.Post(URL+"/getUser", "application/json", bytes.NewReader(data))
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(resp, convey.ShouldNotBeNil)
+				convey.So(resp.StatusCode, convey.ShouldEqual, http.StatusUnauthorized)
+
 			})
 		})
 	})
