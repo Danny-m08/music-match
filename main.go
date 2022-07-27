@@ -14,7 +14,6 @@ import (
 const configFile = "config.yaml"
 
 func main() {
-	errChan := make(chan error)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -30,19 +29,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	go func() {
-		errChan <- serv.StartServer()
-	}()
-
-	select {
-	case err := <-errChan:
-		logging.Error(err.Error())
+	err = serv.StartServer()
+	if err != nil {
+		logging.Error("Unable to start HTTP Server: " + err.Error())
 		os.Exit(1)
-	case sig := <-sigChan:
-		logging.Info(fmt.Sprintf("Signal %s caught -- terminating program", sig.String()))
-		if serv.Close() != nil {
-			logging.Error("Error closing server: " + err.Error())
-		}
-		os.Exit(0)
 	}
+
+	sig := <-sigChan
+	logging.Info(fmt.Sprintf("Signal %s caught -- terminating program", sig.String()))
+	if serv.Close() != nil {
+		logging.Error("Error closing server: " + err.Error())
+	}
+	os.Exit(0)
+
 }

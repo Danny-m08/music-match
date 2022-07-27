@@ -3,6 +3,7 @@ package types
 import "fmt"
 
 type User struct {
+	Name      string     `json:"name"`
 	Username  string     `json:"username"`
 	Password  string     `json:"password"`
 	Email     string     `json:"email"`
@@ -23,5 +24,5 @@ func NewUser() *User {
 }
 
 func (U *User) String() string {
-	return fmt.Sprintf("{username: '%s', email: '%s', password: '%s'}", U.Username, U.Email, U.Password)
+	return fmt.Sprintf("{name: '%s', username: '%s', email: '%s', password: '%s'}", U.Name, U.Username, U.Email, U.Password)
 }

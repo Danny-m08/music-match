@@ -9,6 +9,8 @@ type Config struct {
 type HTTPConfig struct {
 	ListenAddr string     `yaml:"listen-address"`
 	TLS        *TLSConfig `yaml:"tls,omitempty"`
+	Secret     string     `yaml:"secret"`
+	DataStore  string     `yaml:"data-store"`
 }
 
 //TLSConfig provides TLS configuration options for the server

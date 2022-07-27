@@ -1,5 +1,7 @@
 http:
   listen-address: 0.0.0.0:8080
+  secret: "music-match-2022!"
+  data-store: data/
 neo4j:
   endpoint: "neo4j+s://01f4c3bc.databases.neo4j.io"
   plaintext: false

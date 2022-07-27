@@ -5,8 +5,10 @@ go 1.18
 require (
 	github.com/bojanz/currency v1.0.4
 	github.com/fatih/color v1.13.0
+	github.com/golang/mock v1.6.0
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.3
 	github.com/smartystreets/goconvey v1.7.2
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	gopkg.in/yaml.v2 v2.4.0
 )
 

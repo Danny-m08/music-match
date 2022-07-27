@@ -11,6 +11,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
+type Neo4jClient interface {
+	GetUser(*types.User) (*types.User, error)
+	InsertUser(*types.User) error
+	CreateFollowing(user, follower *types.User) error
+	Close() error
+}
+
 type Client struct {
 	session neo4j.Session
 	driver  neo4j.Driver
@@ -71,6 +78,10 @@ func NewClient(conf *config.Neo4jConfig) (*Client, error) {
 	}, nil
 }
 
+func (c *Client) GetNeo4jClient() Client {
+	return *c
+}
+
 ////GetUser queries the DB for the user with the given types object
 func (c *Client) GetUser(user *types.User) (*types.User, error) {
 	query := fmt.Sprintf("MATCH (user:User) WHERE user.username = '%s' OR user.email = '%s' return user", user.Username, user.Email)
@@ -86,6 +97,7 @@ func (c *Client) GetUser(user *types.User) (*types.User, error) {
 
 	entry := records[0].Values[0].(neo4j.Node)
 	return &types.User{
+		Name:     entry.Props["name"].(string),
 		Email:    entry.Props["email"].(string),
 		Username: entry.Props["username"].(string),
 		Password: entry.Props["password"].(string),
