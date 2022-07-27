@@ -191,6 +191,7 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 
 	logging.Info("New login request from " + req.RemoteAddr)
 
+	fmt.Println(req.Header)
 	username := server.verifyUser(req)
 	if username != "" {
 		logging.Info("Session already exists for user")
