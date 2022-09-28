@@ -1,0 +1,13 @@
+http:
+  listen-address: 0.0.0.0:8080
+neo4j:
+  endpoint: "neo4j://localhost"
+  plaintext: true
+  retry:
+    interval: 1000 #interval between each request in ms
+    max:  5 #max number of retries before aborting
+    timeout: 25000 #timeout ms
+  pools:
+    timeout: 5000
+    max-pool-size: 100
+    acq-timeout: 10000

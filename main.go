@@ -2,16 +2,27 @@ package main
 
 import (
 	"fmt"
-	"github.com/danny-m08/music-match/logging"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/danny-m08/music-match/config"
+	"github.com/danny-m08/music-match/logging"
 	"github.com/danny-m08/music-match/server"
 )
 
-const configFile = "config.yaml"
+var configFile string
+
+const defaultConfig = "config.yaml"
+
+func init() {
+	configFile = os.Getenv("CONFIG_PATH")
+	if configFile == "" {
+		configFile = defaultConfig
+	}
+
+	println(configFile)
+}
 
 func main() {
 	errChan := make(chan error)
