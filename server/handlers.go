@@ -3,7 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/danny-m08/music-match/logging"
@@ -12,10 +12,10 @@ import (
 
 const unableToProcessRequestFormat = "Unable to process request from %s: %s"
 
-func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
+func (s *server) newUser(w http.ResponseWriter, req *http.Request) {
 	logging.Info("New user request from: " + req.RemoteAddr)
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		logging.Error(fmt.Sprintf(unableToProcessRequestFormat, req.RemoteAddr, err.Error()))
 		http.Error(w, "Unable to process request", http.StatusBadRequest)
@@ -50,21 +50,46 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 	}
 
 	logging.Info("Creating new user " + user.String())
-	err = server.neo4jClient.InsertUser(user)
+	err = s.neo4jClient.InsertUser(user)
 	if err != nil {
 		logging.Error(fmt.Sprintf(unableToProcessRequestFormat, req.RemoteAddr, err.Error()))
 		http.Error(w, "Unable to create new user", http.StatusInternalServerError)
 		return
 	}
 
+	token, err := s.createJWT(user)
+	if err != nil {
+		logging.Error("Error creating token: " + err.Error())
+		http.Error(w, "Unable to create session", http.StatusInternalServerError)
+		return
+	}
+
+	body, err = s.getTokenPayload(token)
+	if err != nil {
+		logging.Error("Error creating payload: " + err.Error())
+		http.Error(w, "Unable to create session", http.StatusInternalServerError)
+		return
+	}
+
 	logging.Info(fmt.Sprintf("%s created successfully", user.String()))
-	w.WriteHeader(http.StatusOK)
+	w.Write(body)
 }
 
-func (server *server) login(w http.ResponseWriter, req *http.Request) {
+func (s *server) login(w http.ResponseWriter, req *http.Request) {
 	loginReq := LoginRequest{}
 
-	body, err := ioutil.ReadAll(req.Body)
+	logging.Debug("Checking credentials for %s before continuing login process")
+	valid, err := s.checkCredentials(req)
+	if err != nil {
+		logging.Info("Unable to validate credentials: " + err.Error())
+	} else if !valid {
+		logging.Info("Invalid credentials, continuing login process")
+	} else if valid {
+		logging.Info("Valid token!")
+		w.WriteHeader(http.StatusOK)
+	}
+
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -81,7 +106,7 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 		Password: loginReq.Password,
 	}
 
-	userInfo, err := server.neo4jClient.GetUser(&usr)
+	userInfo, err := s.neo4jClient.GetUser(&usr)
 	if err != nil {
 		http.Error(w, "Username or password incorrect", http.StatusUnauthorized)
 	}
@@ -90,13 +115,39 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Username or password incorrect", http.StatusUnauthorized)
 	}
 
-	w.WriteHeader(http.StatusOK)
+	token, err := s.createJWT(&usr)
+	if err != nil {
+		logging.Error("Error creating token: " + err.Error())
+		http.Error(w, "Unable to create session", http.StatusInternalServerError)
+		return
+	}
+
+	body, err = s.getTokenPayload(token)
+	if err != nil {
+		logging.Error("Error creating payload: " + err.Error())
+		http.Error(w, "Unable to create session", http.StatusInternalServerError)
+		return
+	}
+
+	logging.Info("Successful signing from " + usr.String())
+	w.Write(body)
 }
 
-func (server *server) follow(w http.ResponseWriter, req *http.Request) {
+func (s *server) follow(w http.ResponseWriter, req *http.Request) {
 	request := &followRequest{}
 
-	body, err := ioutil.ReadAll(req.Body)
+	logging.Debug("Checking credentials for %s")
+	valid, err := s.checkCredentials(req)
+	if err != nil {
+		logging.Info("Unable to validate credentials: " + err.Error())
+		w.WriteHeader(http.StatusUnauthorized)
+	} else if !valid {
+		logging.Info("Invalid token")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(w, "Unable to process request: "+err.Error(), http.StatusBadRequest)
 		return
@@ -108,7 +159,7 @@ func (server *server) follow(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = server.neo4jClient.CreateFollowing(request.User, request.Follower)
+	err = s.neo4jClient.CreateFollowing(request.User, request.Follower)
 	if err != nil {
 		logging.Error("Unable to create following request: " + err.Error())
 		http.Error(w, "Unable to process request", http.StatusInternalServerError)
@@ -118,7 +169,7 @@ func (server *server) follow(w http.ResponseWriter, req *http.Request) {
 	logging.Info(fmt.Sprintf("%s -> %s following created successfully", request.Follower.String(), request.User.String()))
 }
 
-func (server *server) getFollowers(w http.ResponseWriter, req *http.Request) {
+func (s *server) getFollowers(w http.ResponseWriter, req *http.Request) {
 	//user, err := readUser(req)
 	//if err != nil {
 	//	logging.Error("Unable to read user from request: " + err.Error())

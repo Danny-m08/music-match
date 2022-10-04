@@ -5,6 +5,7 @@ import (
 	"github.com/danny-m08/music-match/config"
 	"github.com/danny-m08/music-match/logging"
 	"github.com/danny-m08/music-match/neo4j"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"regexp"
 )
@@ -12,6 +13,7 @@ import (
 type server struct {
 	neo4jClient *neo4j.Client
 	httpConfig  *config.HTTPConfig
+	secret      []byte
 }
 
 func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*server, error) {
@@ -24,13 +26,19 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 		return nil, errors.New("Http config cannot be nil")
 	}
 
+	secret, err := bcrypt.GenerateFromPassword([]byte(conf.Secret), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
 	return &server{
 		neo4jClient: client,
 		httpConfig:  conf,
+		secret:      secret,
 	}, nil
 }
 
-//StartServer runs a http server using the given config object
+// StartServer runs a http server using the given config object
 func (s *server) StartServer() error {
 
 	http.HandleFunc("/login", s.login)

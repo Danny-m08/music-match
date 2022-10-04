@@ -11,7 +11,16 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
-type Client struct {
+type Client interface {
+	GetUser(*types.User) (*types.User, error)
+	CreateFollowing(*types.User, *types.User) error
+	Unfollow(*types.User, *types.User) error
+	GetFollowers(*types.User) (*[]types.User, error)
+	DeleteUser(*types.User) error
+	InsertUser(*types.User) error
+}
+
+type client struct {
 	session neo4j.Session
 	driver  neo4j.Driver
 }
@@ -27,8 +36,8 @@ const (
 	dateFormat      = "2006-01-02 15:04:05.999999999 -0700 MST"
 )
 
-//NewClient creates a new neo4j client using the specified config
-func NewClient(conf *config.Neo4jConfig) (*Client, error) {
+// NewClient creates a new neo4j client using the specified config
+func NewClient(conf *config.Neo4jConfig) (Client, error) {
 	if conf == nil {
 		return nil, errors.New("Neo4j config cannot be nil")
 	}
@@ -65,14 +74,14 @@ func NewClient(conf *config.Neo4jConfig) (*Client, error) {
 		FetchSize:    conf.BatchSize,
 	})
 
-	return &Client{
+	return client{
 		session: session,
 		driver:  driver,
 	}, nil
 }
 
-////GetUser queries the DB for the user with the given types object
-func (c *Client) GetUser(user *types.User) (*types.User, error) {
+// //GetUser queries the DB for the user with the given types object
+func (c client) GetUser(user *types.User) (*types.User, error) {
 	query := fmt.Sprintf("MATCH (user:User) WHERE user.username = '%s' OR user.email = '%s' return user", user.Username, user.Email)
 
 	records, err := c.readTransaction(query)
@@ -92,8 +101,8 @@ func (c *Client) GetUser(user *types.User) (*types.User, error) {
 	}, nil
 }
 
-//CreateFollowing creates a follower relationship from user -> follower in the Neo4j DB
-func (c *Client) CreateFollowing(user, follower *types.User) error {
+// CreateFollowing creates a follower relationship from user -> follower in the Neo4j DB
+func (c client) CreateFollowing(user, follower *types.User) error {
 	logging.Info(fmt.Sprintf("Creating Follower relationship with follower %s -> user %s", user.String(), follower.String()))
 	query := `MATCH (user:User), (follower:User) WHERE (user.email = '%s' AND follower.email = '%s') OR (user.username = '%s' AND follower.username = '%s') CREATE (follower)-[f:FOLLOWS]->(user) return type(f)`
 	query = fmt.Sprintf(query, user.Email, follower.Email, user.Username, follower.Username)
@@ -101,8 +110,8 @@ func (c *Client) CreateFollowing(user, follower *types.User) error {
 	return err
 }
 
-//Unfollow removes the FOLLOWS relationship between the 2 users starting from follower -> user
-func (c *Client) Unfollow(user, follower *types.User) error {
+// Unfollow removes the FOLLOWS relationship between the 2 users starting from follower -> user
+func (c client) Unfollow(user, follower *types.User) error {
 	logging.Info(fmt.Sprintf("Unfollow request to unfollow %s from %s", follower.String(), user.String()))
 	query := `MATCH (follower:User { username: '%s' })-[f:FOLLOWS]->(user:User { username: '%s' }) DELETE f`
 	query = fmt.Sprintf(query, follower.Username, user.Username)
@@ -110,8 +119,8 @@ func (c *Client) Unfollow(user, follower *types.User) error {
 	return err
 }
 
-//GetFollowers queries the database for all followers for the given user
-func (c *Client) GetFollowers(user *types.User) ([]*types.User, error) {
+// GetFollowers queries the database for all followers for the given user
+func (c client) GetFollowers(user *types.User) ([]*types.User, error) {
 	logging.Info("Retrieving followers for " + user.String())
 	users := make([]*types.User, 0)
 
@@ -133,23 +142,23 @@ func (c *Client) GetFollowers(user *types.User) ([]*types.User, error) {
 	return users, nil
 }
 
-//DeleteUser deletes a user from the database
-func (c *Client) DeleteUser(username, email string) error {
+// DeleteUser deletes a user from the database
+func (c client) DeleteUser(username, email string) error {
 	query := `Match (u:User {email: '%s'}) DETACH DELETE u`
 	query = fmt.Sprintf(query, email)
 	_, err := c.writeTransaction(query)
 	return err
 }
 
-//Insert User inserts the user into the database
-func (c *Client) InsertUser(user *types.User) error {
+// Insert User inserts the user into the database
+func (c client) InsertUser(user *types.User) error {
 	query := fmt.Sprintf("CREATE (u:User %s)", user.String())
 
 	_, err := c.writeTransaction(query)
 	return err
 }
 
-func (c *Client) CreateListing(listing *types.Listing) error {
+func (c client) CreateListing(listing *types.Listing) error {
 	query := "CREATE (l:Listing { id : '%s', price: '%s', date: '%s'}) return l"
 	logging.Info("Creating new listing: " + listing.String())
 	query = fmt.Sprintf(query, listing.ID, listing.Price.String(), listing.Created.String())
@@ -157,8 +166,8 @@ func (c *Client) CreateListing(listing *types.Listing) error {
 	return err
 }
 
-//NewListing creates a new listing and sets the given user as the seller
-func (c *Client) CreateUserListing(user *types.User, l *types.Listing) error {
+// NewListing creates a new listing and sets the given user as the seller
+func (c client) CreateUserListing(user *types.User, l *types.Listing) error {
 	err := c.CreateListing(l)
 	if err != nil {
 		return err
@@ -170,7 +179,7 @@ func (c *Client) CreateUserListing(user *types.User, l *types.Listing) error {
 	return err
 }
 
-//func (c *Client) GetListingsForUser(user *types.User) ([]*types.Listing, error) {
+//func (c client) GetListingsForUser(user *types.User) ([]*types.Listing, error) {
 //	query := `MATCH (u:User { username: '%s'}), (l:Listing)-(u)-[SELLING]->(l) return l`
 //	query = fmt.Sprintf(query, user.Username)
 //	records, err := c.readTransaction(query)
@@ -189,16 +198,16 @@ func (c *Client) CreateUserListing(user *types.User, l *types.Listing) error {
 //	}
 //}
 
-//Sold marks the listing as sold in the DB
-func (c *Client) Sold(user *types.User, l *types.Listing) error {
+// Sold marks the listing as sold in the DB
+func (c client) Sold(user *types.User, l *types.Listing) error {
 	query := `MATCH (u:User { username: '%s' }) CREATE (u)-[:BOUGHT {}]->(:Listing { id : '%s', date: '%s'})`
 	query = fmt.Sprintf(query, user.Username, l.ID, l.Created.String())
 	_, err := c.writeTransaction(query)
 	return err
 }
 
-//IsSold checks if the given listing is sold and returns transaction details if sold
-func (c *Client) IsSold(l *types.Listing) (*types.Transaction, error) {
+// IsSold checks if the given listing is sold and returns transaction details if sold
+func (c client) IsSold(l *types.Listing) (*types.Transaction, error) {
 	query := `MATCH (u:User)-[BOUGHT]->(l:Listing { id: '%s' }) return u, l`
 	query = fmt.Sprintf(query, l.ID)
 	records, err := c.readTransaction(query)
@@ -244,8 +253,8 @@ func (c *Client) IsSold(l *types.Listing) (*types.Transaction, error) {
 //	return res, nil
 //}
 
-//writeTransaction is a generic write operation on the database
-func (c *Client) writeTransaction(query string) ([]*neo4j.Record, error) {
+// writeTransaction is a generic write operation on the database
+func (c client) writeTransaction(query string) ([]*neo4j.Record, error) {
 	records, err := c.session.WriteTransaction(
 		func(tx neo4j.Transaction) (interface{}, error) {
 
@@ -264,7 +273,7 @@ func (c *Client) writeTransaction(query string) ([]*neo4j.Record, error) {
 	return records.([]*neo4j.Record), nil
 }
 
-func (c *Client) readTransaction(query string) ([]*neo4j.Record, error) {
+func (c client) readTransaction(query string) ([]*neo4j.Record, error) {
 	records, err := c.session.ReadTransaction(
 		func(tx neo4j.Transaction) (interface{}, error) {
 
@@ -324,7 +333,7 @@ func getUser(node *neo4j.Node, required map[string]bool) (*types.User, error) {
 //	return nil
 //}
 
-func (c *Client) Close() error {
+func (c client) Close() error {
 	err := c.session.Close()
 	if err != nil {
 		return err
