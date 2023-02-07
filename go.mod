@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/bojanz/currency v1.1.0
 	github.com/fatih/color v1.13.0
-	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
+	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
 	github.com/smartystreets/goconvey v1.7.2
 	gopkg.in/yaml.v2 v2.4.0
 )
