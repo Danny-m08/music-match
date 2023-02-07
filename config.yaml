@@ -1,8 +1,11 @@
 http:
   listen-address: 0.0.0.0:8080
+  metrics-address: 0.0.0.0:9090
+
 neo4j:
-  endpoint: "neo4j+s://01f4c3bc.databases.neo4j.io"
-  plaintext: false
+  #endpoint: "neo4j+s://01f4c3bc.databases.neo4j.io"
+  endpoint: neo4j://localhost
+  plaintext: true
   username: neo4j
   password: YuoQdM62FKAQDuzesY4S6GgukPcSAtQ4OPzyQsL1fWI
   retry:

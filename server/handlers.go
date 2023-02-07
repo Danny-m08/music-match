@@ -3,7 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/danny-m08/music-match/logging"
@@ -15,7 +15,7 @@ const unableToProcessRequestFormat = "Unable to process request from %s: %s"
 func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 	logging.Info("New user request from: " + req.RemoteAddr)
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		logging.Error(fmt.Sprintf(unableToProcessRequestFormat, req.RemoteAddr, err.Error()))
 		http.Error(w, "Unable to process request", http.StatusBadRequest)
@@ -64,7 +64,7 @@ func (server *server) newUser(w http.ResponseWriter, req *http.Request) {
 func (server *server) login(w http.ResponseWriter, req *http.Request) {
 	loginReq := LoginRequest{}
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -96,7 +96,7 @@ func (server *server) login(w http.ResponseWriter, req *http.Request) {
 func (server *server) follow(w http.ResponseWriter, req *http.Request) {
 	request := &followRequest{}
 
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(w, "Unable to process request: "+err.Error(), http.StatusBadRequest)
 		return

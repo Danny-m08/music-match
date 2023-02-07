@@ -5,6 +5,7 @@ import (
 	"github.com/danny-m08/music-match/config"
 	"github.com/danny-m08/music-match/logging"
 	"github.com/danny-m08/music-match/neo4j"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"regexp"
 )
@@ -30,25 +31,34 @@ func NewServer(conf *config.HTTPConfig, neo4jConfig *config.Neo4jConfig) (*serve
 	}, nil
 }
 
-//StartServer runs a http server using the given config object
+// StartServer runs a http server using the given config object
 func (s *server) StartServer() error {
 
-	http.HandleFunc("/login", s.login)
-	http.HandleFunc("/signup", s.newUser)
-	http.HandleFunc("/follow", s.follow)
-	http.HandleFunc("/followers", s.getFollowers)
+	apiServer := http.NewServeMux()
+
+	apiServer.HandleFunc("/login", s.login)
+	apiServer.HandleFunc("/signup", s.newUser)
+	apiServer.HandleFunc("/follow", s.follow)
+	apiServer.HandleFunc("/followers", s.getFollowers)
 
 	logging.Info("Server starting and listening on " + s.httpConfig.ListenAddr)
 	if s.httpConfig.TLS != nil && s.httpConfig.TLS.Enabled {
 		logging.Debug("TLS enabled")
-		err := http.ListenAndServeTLS(s.httpConfig.ListenAddr, s.httpConfig.TLS.CertFile, s.httpConfig.TLS.KeyFile, nil)
+		err := http.ListenAndServeTLS(s.httpConfig.ListenAddr, s.httpConfig.TLS.CertFile, s.httpConfig.TLS.KeyFile, apiServer)
 		if err != nil {
 			return err
 		}
 	}
-	logging.Debug("TLS disabled")
 
 	return http.ListenAndServe(s.httpConfig.ListenAddr, nil)
+}
+
+func (s *server) StartMetrics() error {
+	metricsServer := http.NewServeMux()
+	metricsServer.Handle("/metrics", promhttp.Handler())
+	logging.Info("Metrics listening on " + s.httpConfig.MetricsAddr)
+
+	return http.ListenAndServe(s.httpConfig.MetricsAddr, metricsServer)
 }
 
 func (s *server) Close() error {

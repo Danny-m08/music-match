@@ -45,6 +45,10 @@ func main() {
 		errChan <- serv.StartServer()
 	}()
 
+	go func() {
+		errChan <- serv.StartMetrics()
+	}()
+
 	select {
 	case err := <-errChan:
 		logging.Error(err.Error())
