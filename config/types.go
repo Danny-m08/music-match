@@ -5,13 +5,14 @@ type Config struct {
 	Http *HTTPConfig  `yaml:"http"`
 }
 
-//HTTPConfig provisions an http server from the given config
+// HTTPConfig provisions an http server from the given config
 type HTTPConfig struct {
-	ListenAddr string     `yaml:"listen-address"`
-	TLS        *TLSConfig `yaml:"tls,omitempty"`
+	ListenAddr  string     `yaml:"listen-address"`
+	MetricsAddr string     `yaml:"metrics-address"`
+	TLS         *TLSConfig `yaml:"tls,omitempty"`
 }
 
-//TLSConfig provides TLS configuration options for the server
+// TLSConfig provides TLS configuration options for the server
 type TLSConfig struct {
 	Enabled  bool   `yaml:"enabled"`
 	CertFile string `yaml:"cert-path"`
