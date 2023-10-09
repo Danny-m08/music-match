@@ -3,7 +3,7 @@ module github.com/danny-m08/music-match
 go 1.18
 
 require (
-	github.com/bojanz/currency v1.1.0
+	github.com/bojanz/currency v1.1.3
 	github.com/fatih/color v1.14.1
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
 	github.com/smartystreets/goconvey v1.7.2
@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	github.com/cockroachdb/apd/v3 v3.1.2 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kr/pretty v0.1.0 // indirect
