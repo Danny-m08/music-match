@@ -1,7 +1,7 @@
-github.com/bojanz/currency v1.1.0 h1:/guGvIsnqWXRe/wkoKnKevROP/qj66iDX/0Ct1/yuI0=
-github.com/bojanz/currency v1.1.0/go.mod h1:+oIBEvadQQQfUwSdrA36hwLpRIjKPwneSX+WNxpvqz8=
-github.com/cockroachdb/apd/v3 v3.1.2 h1:DDFeYj70f6yWcWlfGNwZ7z6NSpkOZAKsse1VmBtf+zs=
-github.com/cockroachdb/apd/v3 v3.1.2/go.mod h1:klXJcjp+FffLTHlhIG69tezTDvdP065naDsHzKhYSqc=
+github.com/bojanz/currency v1.1.3 h1:Ie8LYoMegQQlXH5Lq/gMRaWAD8J2/DYPewv+JV6UTPs=
+github.com/bojanz/currency v1.1.3/go.mod h1:jNoZiJyRTqoU5DFoa+n+9lputxPUDa8Fz8BdDrW06Go=
+github.com/cockroachdb/apd/v3 v3.2.1 h1:U+8j7t0axsIgvQUqthuNm82HIrYXodOV2iWLWtEaIwg=
+github.com/cockroachdb/apd/v3 v3.2.1/go.mod h1:klXJcjp+FffLTHlhIG69tezTDvdP065naDsHzKhYSqc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fatih/color v1.14.1 h1:qfhVLaG5s+nCROl1zJsZRxFeYrHLqWroPOQ8BWiNb4w=
